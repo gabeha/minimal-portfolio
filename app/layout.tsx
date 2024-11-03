@@ -60,7 +60,7 @@ export default function RootLayout({
         </div>
         <footer className="w-full mex-auto flex justify-center items-center gap-4 py-4">
           <a href="https://github.com/gabeha" target="_blank">
-            Github
+            GitHub
           </a>
           <a href="https://www.linkedin.com/in/gabriel-hauss/" target="_blank">
             LinkedIn

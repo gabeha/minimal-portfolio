@@ -22,7 +22,7 @@ export default function TimelineItem({
     <div>
       <div className="flex justify-between">
         <h3 className="text-base sm:text-lg font-semibold">{title}</h3>
-        <span>{date}</span>
+        <span className="text-right text-sm">{date}</span>
       </div>
       <p className="italic">{location}</p>
       <div className="ml-4">
