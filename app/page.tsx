@@ -11,7 +11,7 @@ const educationTimelineItems = [
       {
         category: "Subjects",
         description:
-          "Object-Oriented Programming, Domain-Driven Design,Algorithms, Deep Neural Networks, Machine Learning",
+          "Object-Oriented Programming, Domain-Driven Design, Algorithms, Deep Neural Networks, Machine Learning",
       },
     ],
   },
