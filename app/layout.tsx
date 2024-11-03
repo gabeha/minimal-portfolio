@@ -33,9 +33,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${eb_garamond.className} antialiased bg-orange-50 min-h-screen`}
+        className={`${eb_garamond.className} antialiased bg-orange-50 min-h-screen flex flex-col justify-between`}
       >
-        <div className="h-full flex flex-col p-4 space-y-2 max-w-2xl mx-auto">
+        <div className="flex-grow h-full flex flex-col p-4 space-y-2 max-w-2xl mx-auto w-full">
           {/* Header */}
           <header className="h-full flex justify-between w-full items-end">
             <Link href="/">
@@ -58,7 +58,7 @@ export default function RootLayout({
             {children}
           </main>
         </div>
-        <footer className="w-full mex-auto flex justify-center items-center gap-4 py-4">
+        <footer className="w-full mx-auto flex justify-center items-center gap-4 py-4">
           <a href="https://github.com/gabeha" target="_blank">
             GitHub
           </a>
