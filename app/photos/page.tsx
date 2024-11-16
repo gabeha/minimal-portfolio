@@ -6,7 +6,7 @@ export default async function Photos() {
   const fetchAlbumsWithCovers = async () => {
     const { data: albumsData, error: albumsError } = await supabase
       .from("albums")
-      .select("name, path, thumbnail, emoji, year, order");
+      .select("name, path, year, order");
 
     if (albumsError) {
       console.error(albumsError);

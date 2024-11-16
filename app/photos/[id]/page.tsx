@@ -5,6 +5,8 @@ import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { ImageViewer } from "@/components/image-viewer";
 
+export const revalidate = 60; // Revalidate every 60 seconds
+
 interface AlbumViewProps {
   params: Promise<{ id: string }>;
 }
@@ -19,6 +21,13 @@ export default async function AlbumView({ params }: AlbumViewProps) {
       console.error(error);
       return [];
     }
+    data.sort((a, b) => {
+      const matchA = a.name.match(/\d+/);
+      const matchB = b.name.match(/\d+/);
+      const numA = matchA ? parseInt(matchA[0], 10) : 0; // Default to 0 if no match
+      const numB = matchB ? parseInt(matchB[0], 10) : 0; // Default to 0 if no match
+      return numA - numB; // Compare numbers
+    });
     return data;
   };
 
