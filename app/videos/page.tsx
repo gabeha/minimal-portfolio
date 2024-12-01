@@ -28,9 +28,9 @@ export default async function Home() {
               <Image
                 src={video.thumbnail!}
                 alt={video.title!}
-                width={640}
-                height={360}
-                quality={80}
+                width={320}
+                height={180}
+                quality={100}
                 className="w-full object-cover"
               />
             </a>
