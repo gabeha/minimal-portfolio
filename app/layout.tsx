@@ -20,8 +20,12 @@ const eb_garamond = EB_Garamond({
 
 const links = [
   {
+    href: "/videos",
+    label: "Videos",
+  },
+  {
     href: "/photos",
-    label: "Photography",
+    label: "Photos",
   },
 ];
 
