@@ -45,7 +45,7 @@ export function TimelineCollapsible({
           className={cn(
             "relative",
             !isOpen &&
-              "text-transparent bg-clip-text bg-gradient-to-b from-black to-transparent"
+              "text-transparent bg-clip-text bg-linear-to-b from-black to-transparent"
           )}
         >
           {timelineItems[0] && <TimelineItem {...timelineItems[0]} />}

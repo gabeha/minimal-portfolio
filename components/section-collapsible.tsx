@@ -45,7 +45,7 @@ export function SectionCollapsible({
           className={cn(
             "relative space-y-2",
             !isOpen &&
-              "text-transparent bg-clip-text bg-gradient-to-b from-black to-transparent"
+              "text-transparent bg-clip-text bg-linear-to-b from-black to-transparent"
           )}
         >
           {sectionItems.slice(0, 2).map((item, index) => (
