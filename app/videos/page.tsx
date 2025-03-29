@@ -12,8 +12,8 @@ export default async function Home() {
   const videos = await getChannelVideos();
 
   return (
-    <div className="w-full space-y-4">
-      <h1 className="text-2xl">My Videos</h1>
+    <div className="w-full space-y-6 mx-auto py-4">
+      <h1 className="text-3xl font-bold">Videos</h1>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {videos?.map((video: Video) => (
           <div

@@ -44,8 +44,8 @@ export default async function Photos() {
   }, {} as Record<string, typeof albums>);
 
   return (
-    <div className="w-full space-y-4">
-      <h1 className="text-2xl">Albums</h1>
+    <div className="w-full space-y-6 mx-auto py-4">
+      <h1 className="text-3xl font-bold">Photos</h1>
       {Object.keys(albumsByYear)
         .sort((a, b) => parseInt(b) - parseInt(a)) // Sort years in descending order
         .map((year) => (

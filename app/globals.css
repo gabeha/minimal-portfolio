@@ -1,4 +1,5 @@
-@import 'tailwindcss';
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -41,7 +42,7 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-sm: calc(var(--radius) - 4px);
 
-  --background-image-noise: url('/noise.svg');
+  --background-image-noise: url("/noise.svg");
 }
 
 /*

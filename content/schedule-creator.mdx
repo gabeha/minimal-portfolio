@@ -1,0 +1,77 @@
+export const metadata = {
+  title: "Schedule Creator",
+  description:
+    "Python implementation of creating schedules for the FSE LAS programmes.",
+  date: "2025-03-22",
+};
+
+## Defining the Problem
+
+A `schedule` contains modules. A `module` can be a course or skill and has one or more `teaching activities`. For a module to be available for a selection, the requirement for its teaching activities must be met. Some teaching activities require availability for all of its timeslots, others only for some. For instance, a `course` module might have:
+
+- Lecture: Monday, 8:30-10:00
+- Tutorial 1: Monday 10:15-11:15
+- Tutorial 2: Wednesday: 8:30-10:00
+
+A `skill` module in contrast might have:
+
+- Lab 1: Tuesday, 9:00-16:00
+- Lab 2: Wednesday, 9:00-16:00
+- Lab 3: Friday, 9:00-16:00
+
+The `course` is available if the `schedule` holds empty slots for _all_ time-slots (Lecture, Tutorial 1, Tutorial 2). The `skill` is available if _at least one_ of the time-slots (Lab 1, Lab 2, Lab 3) can be fitted into the `schedule`.
+
+This example was carefully chosen to illustrate a point: It becomes clear that the above yields 2 possible schedules. The time-slots for the `course` are fixed, but we have flexibility when to schedule the `skill` - either on Tuesday or on Friday. Now, we do not want to make any assumptions and keep track of _all possible_ variations of the schedule. Therefore, we need to _branch_ out. If the consider a tree-like structure, after the selecting the `course`, we have one _parent node_. After selecting the `skill`, we _branch out_ from that node into two _child nodes_. Preserving all possible combinations is important for subsequent selections. Let us now add another `course 2`:
+
+- Lecture: Monday, 12:30-14:00
+- Tutorial 1: Monday 14:15-15:45
+- Tutorial 2: Friday: 8:30-10:00
+
+Now we can see that there remains only one possible combination to fit all modules (`course`, `skill`, `course2`) into our schedule - the `skill` Friday time-slot drops out due to `course2`'s Tutorial 2. This example showcase the importance of maintaining a record of all possible schedule variations at any given point in the selection process.
+
+Above, I defined two different types of modules - `course` and `skill`. I do not intend to hard-encode these into the implementation. Therefore, identifying whether any given time-slot is singly mandatory or as part of a group should be handled via a flag/identifier as part of the time-slots data representation. As an example, let us imagine another `course3` with the following time-slots:
+
+- Lecture 1: Monday, 8:30-10:00
+- Tutorial 1: Monday 10:15-11:15
+- Tutorial 2: Wednesday: 8:30-10:00
+
+AND
+
+- Lecture 2: Monday, 12:30-14:00
+- Tutorial 3: Monday 14:15-15:45
+- Tutorial 4: Friday: 8:30-10:00
+
+`Course 3` has a high demand which is why it is given twice per week. A student must be available for _all_ time-slots of _one_ of the above time-slot combinations, i.e. a student cannot take Lecture 1, Tutorial 1 and then Tutorial 4.
+
+Similarly, `skill2` is a Biology module that requires bacteria to cultivate for 24 hours. Therefore it is structured like this:
+
+- Lab 1: Monday, 9:00-12:30 AND Tuesday, 13:00-16:00
+- Lab 2: Thursday, 9:00-12:30 AND Friday, 13:00-16:00
+
+These examples illustrate that we cannot rely on the mere type of a module to define the relationships between its constituent teaching activities. We need a flexible approach, the differentiation I am making between a `course` and a `skill` is merely to illustrate the example.
+
+## Implementation Ideas:
+
+We are going to approach the implementation by designing a Python library. We will have one entry-point called `ScheduleCreator` utilizing the Facade Pattern. Since this will be used as an API, we will need to be able to create multiple instance of the `ScheduleCreator` simultaneously. The `ScheduleCreator` exposes methods such as:
+
+- `select_module()`
+- `deselect_module()`
+- `view_current_schedules()`
+- a nice `__repr__` for development
+
+Using a `contextmanager`, we make sure that `Schedules` can only be created through the `ScheduleCreator`.
+
+We should also create our own generic data structure to capture the above illustrated tree-like structure for selecting modules and thereby creating schedules. The generic data structure should allow to:
+
+- hold schedule variations
+- add a module to all available schedule schedule variations -> this should be validated for overlaps first
+- remove a module from all schedule variations
+
+When it comes to the different classes to implement I was thinking about the following:
+
+- `ScheduleCreator`
+- `Module` (maybe with a ModuleBase Abstract Base Class and then variations for `skill` and `course` - this would allow for future extension adhering to the Open/Closed Principle)
+- `Schedule` - a collection of Modules
+- `ValidatingTree` - our generic data structure
+
+These are the guidelines. Please give me feedback, correct me or extend upon my ideas.

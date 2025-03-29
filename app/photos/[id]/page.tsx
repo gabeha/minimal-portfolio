@@ -34,7 +34,7 @@ export default async function AlbumView({ params }: AlbumViewProps) {
   const imageUrls = await fetchPhotos();
 
   return (
-    <div className="w-full">
+    <div className="w-full py-4 mx-auto">
       <Button
         asChild
         variant="ghost"
