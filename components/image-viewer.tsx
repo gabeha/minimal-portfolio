@@ -8,16 +8,21 @@ import {
 } from "@/components/ui/dialog";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import Image from "next/image";
-import { useState } from "react";
+import { useState, KeyboardEvent } from "react";
 import { Button } from "./ui/button";
 
-// Props for the ImageViewer component
+// Import placeholders JSON (with { placeholder, width, height } for each image)
+import placeholders from "@/public/placeholders.json";
+
+/**
+ * Each `images` item has: { id: string; name: string }
+ * The `album` is the folder name (e.g. "bogota2023").
+ */
 interface ImageViewerProps {
   images: { id: string; name: string }[];
   album: string;
 }
 
-// ImageViewer component
 export function ImageViewer({ images, album }: ImageViewerProps) {
   const [currentIndex, setCurrentIndex] = useState<number | null>(null);
 
@@ -41,56 +46,108 @@ export function ImageViewer({ images, album }: ImageViewerProps) {
     }
   };
 
-  return (
-    <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-      {images.map((image, index) => (
-        <div
-          key={image.id}
-          className="relative w-auto h-44 cursor-pointer"
-          onClick={() => openImage(index)}
-        >
-          <Image
-            src={`${process.env.NEXT_PUBLIC_CDN_URL}/${album}/${image.name}`}
-            alt="Album thumbnail"
-            fill
-            placeholder="blur"
-            blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADb/2wBDABQODxIPDRQSEBIXFRQYHjIhHhwcHj0sLiQySUBMS0dARkVQWnNiUFVtVkVGZIhlbXd7gYKBTmCNl4x9lnN+gXz/2wBDARUXFx4aHjshITt8U0ZTfHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHz/wAARCAHTAjsDASIAAhEBAxEB/8QAGQABAQEBAQEAAAAAAAAAAAAAAAECBAMG/8QAFBABAAAAAAAAAAAAAAAAAAAAAP/EABYBAQEBAAAAAAAAAAAAAAAAAAABAv/EABQRAQAAAAAAAAAAAAAAAAAAAAD/2gAMAwEAAhEDEQA/APnwG2RUUAABUUAAFAAVFAABQBQAFAAAAAAAQAAQAURUARUAABEVEBFQBFQVAARFQBFQBFRBAFEAEQABFQAAQRUVAAAAQAAAB1gKoACgAKgCgAoigKgCgAKiigACoAoAACAAAioAAKgACKgAIgIqAIqAIAqAgCKgCKgCAggAiAKIAAgCAACKigAIACAAAAOsBVAAFQBQAURQFQBQAURRQAFEUAAABBRFAEAABQEAABAAEVEBAAQAQEFEVAEVAQBBAQBFQQBFAEAAEAAQBQAEAAABAAHWIKqiKAAAqKAAKoACooAAKIoAAKIqAAAAAAKAgAACAACIAIACAIqCiKgCACAiAioAioAgCCAoIqAAAIAgAAAqCKgAAAAOsBVAAFQBQAURQFQBQAURQAEFAAABRAFEBQAAABAAAAQEBAAQAQAVAQBFQBAQEAEBAAQQBAAAEBQAEAAQAQAUAAAAdQCqKgCiKAqAKIoCoqAqAKACiKAACiAqiAKIAogAAACIKgAIACKgCAKIACACAiAioAgAIAIAIIACAAAoIAgAAAAAIAAAA6QGlFQBRFQFQBQAURQUQBVQFURQAAUQBRAFAABEFQAAAEAAQFEABAAQAEBBAQAEAQAEABAEEAAQAAABBFEFFEAUQBRARRAHSqCqogCgAogCqgKoigogCgAoigAAoggogCiAKIAqAACCqgAIACAAgICAAggAIAgAIACAAgCCAAIAqAAAAAIAAAAAAAA6RBoUQFURQUQBQAURQFQQVUAUQBQAUQBRAVRAFEAAABAAEBUBAQAEABBAAQBFQBAAQQAEABBAAAQQVAAAUAAAAUQBRARRAHQA0qiAKIIKqAKIoKIAqoAoiiqIAoigAAogCoCAAACAqAAIAAgAIACAAgAgAggKggAgAIIAgICAKIAAgKAAAAACiAKIAogDoEGhRFAVAFEUFEBVVAFEUFEAUBBRAFEUAAAAAEBRAAABAAQAEABAAQQFQQBAAQRBUEBUQAEBFQAAQFEAURQAAAEFEAUQBRAHQINiiAKIoqiAKqAKIqCiAKqAKIoCoCqIAogCiAKIAAgKIIAICoICoIACCAgAggKggCCAqCACAKggiiAKIAogCiKAACiAqiAKAAAg9hFaBUAUQBVZUFEAVUAVUAUQFaEEFEAURQAABAFEAUQABAVAAQAEEBUEAEAEEBUEEEEBUEBUBUBAFQAAAUQBQAFQRVEAUAAAAAHsIKKIAoigogCqgiqIoKIAqoAogCgAogCiAqiAKgACAioAAgAIACACCIKiACCKKiAggACCoAAAAAAAAAAAAoigACgACoIKIA9RAVRAFVAFEUFEAaEAVWVBRBBVQFUQBRFAAABAUQBUAAQAEABAAQAQQRUQAQRQAVBAEAAAAAAAAAAAAAAAAURQABQAAAGxBFUAFEAVUEFVlQUQFaEAVWVBRAFVlUFEAUQBRAAAAQABAVBAVBAARQQAEEVABUEAQAAAAAAAAAAAAAAAAAAABRFAAFAAaEEVRAFAQUQBVQFVWVBRFQUQBVQBRAFEAUQBRAFEAAQFEAEABAUEEAAVEAEEVFQAAAAAAAAAAAAAAAAAAAAAAAAVAFEAVUEaUQBQAURQFQRVABRFAVBBQAFQBRAFEAUQBUAAEABAAFBABAFBAEARUABAAAAAAAAAAAAAAAAAAAAAAAAAAAAFAFAAAEVRFAVAFVBFUAFEAUBAVAFEAUQBRAFQAARQBAVAAQFBFQQAVBAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAUAUAAAAARVAAVFAAQUAUVAFAAAQAAAAARQAAQAEVFAEEABAEVAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFEAUAAAUAAVFQABVAAVFQAAAUAAAABFQAABFQABRAAQAABUEAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABRAFAFAAUBAVFAABQAAAFAAABAAAARUARUFEVBABQBBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFAAABQAFAAFAAAABQAAAEVAAAEVAEUBEUFQABAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABRRBQEUAAAFRRAAFAAVFAAAVFAAAAQAFEAARQEAFQAEABBUAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAUBoAAABBQAAAUAABBQQAAUAAAAAAABFQAAVBUBBUUQVAAEURQEAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAUBpAABQAAAVFEAAFAAAQVAFAAAAAAAAAFQABFQBFARFBUAFAAEUQQBAAAAAAAAAAAAAAAAAAAAAAAAAAAABQVtEUAAEAFAAEFRQABAFAAAAAAAAAAAAARQEABABUAFQVFABFAAEUQQBAAAAAAAAAAAAAAAAAAAAAAAAAABoBtAAAFAAEAAUAABEUAAAAAAAQAAAFAAAFEAARUFEVAEVBQBFAAAEEFQABAAAAAAAAAAAAAAAAAAAAAAAABoBtAABUUQAAABQAFRRAAAAAAQAAAAAAAFAAEVAEVBRFARFQUAFAEABARUAAQAAAAAAAAAAAAAAAAAAAAAAAAaAbQAEFAAAAAFAEFAAAAAAAQAAAAAAAFAAEABAFAARAFABQBAAQEAABAAAAAAAAAAAAAAAAAAAAAAAAB//Z"
-            sizes="11rem"
-            className="rounded-none shadow-xl object-cover"
-            loading="lazy"
-            quality={60}
-          />
-        </div>
-      ))}
+  // Optional: handle arrow-key navigation in the overall container
+  const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === "ArrowLeft") showPrevImage();
+    else if (e.key === "ArrowRight") showNextImage();
+    else if (e.key === "Escape") closeImage();
+  };
 
+  return (
+    // Use CSS columns for a basic masonry layout
+    <div
+      className="columns-2 md:columns-3 gap-4"
+      tabIndex={0}
+      onKeyDown={handleKeyDown}
+      aria-label="Image viewer. Use left/right arrows to navigate. Press Escape to close."
+    >
+      {images.map((image, index) => {
+        // Build the key to look up in placeholders.json
+        const filePath = `${album}/${image.name}`;
+
+        // The JSON entry has: { placeholder, width, height }
+        const info = (
+          placeholders as Record<
+            string,
+            { placeholder: string; width: number; height: number }
+          >
+        )[filePath];
+
+        const blurDataURL = info?.placeholder || "";
+        const originalWidth = info?.width || 600; // fallback
+        const originalHeight = info?.height || 400; // fallback
+
+        return (
+          <div
+            key={image.id}
+            className="mb-4 break-inside-avoid cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
+            onClick={() => openImage(index)}
+          >
+            <Image
+              src={`${process.env.NEXT_PUBLIC_CDN_URL}/${filePath}`}
+              alt={`Thumbnail for ${image.name}`}
+              width={originalWidth}
+              height={originalHeight}
+              placeholder="blur"
+              blurDataURL={blurDataURL}
+              className="w-full h-auto object-cover"
+              loading="lazy"
+              quality={60}
+            />
+          </div>
+        );
+      })}
+
+      {/* Dialog for the large image */}
       <Dialog open={currentIndex !== null} onOpenChange={closeImage}>
-        <DialogContent className="w-5/6 bg-orange-100 sm:max-w-3xl mx-auto flex flex-col p-2 sm:p-4 [&>button]:hidden mt-0 sm:rounded-none">
-          <DialogHeader className="text-white hidden">
-            <DialogTitle>Image Viewer</DialogTitle>
-            <DialogDescription>
-              Click on the image to close the viewer.
-            </DialogDescription>
-          </DialogHeader>
-          {currentIndex !== null && (
-            <div className="flex items-center justify-center w-full h-[60vh] relative">
-              <Image
-                src={`${process.env.NEXT_PUBLIC_CDN_URL}/${album}/${images[currentIndex].name}`}
-                alt="Full-size album image"
-                fill
-                placeholder="blur"
-                blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADb/2wBDABQODxIPDRQSEBIXFRQYHjIhHhwcHj0sLiQySUBMS0dARkVQWnNiUFVtVkVGZIhlbXd7gYKBTmCNl4x9lnN+gXz/2wBDARUXFx4aHjshITt8U0ZTfHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHz/wAARCAHTAjsDASIAAhEBAxEB/8QAGQABAQEBAQEAAAAAAAAAAAAAAAECBAMG/8QAFBABAAAAAAAAAAAAAAAAAAAAAP/EABYBAQEBAAAAAAAAAAAAAAAAAAABAv/EABQRAQAAAAAAAAAAAAAAAAAAAAD/2gAMAwEAAhEDEQA/APnwG2RUUAABUUAAFAAVFAABQBQAFAAAAAAAQAAQAURUARUAABEVEBFQBFQVAARFQBFQBFRBAFEAEQABFQAAQRUVAAAAQAAAB1gKoACgAKgCgAoigKgCgAKiigACoAoAACAAAioAAKgACKgAIgIqAIqAIAqAgCKgCKgCAggAiAKIAAgCAACKigAIACAAAAOsBVAAFQBQAURQFQBQAURRQAFEUAAABBRFAEAABQEAABAAEVEBAAQAQEFEVAEVAQBBAQBFQQBFAEAAEAAQBQAEAAABAAHWIKqiKAAAqKAAKoACooAAKIoAAKIqAAAAAAKAgAACAACIAIACAIqCiKgCACAiAioAioAgCCAoIqAAAIAgAAAqCKgAAAAOsBVAAFQBQAURQFQBQAURQAEFAAABRAFEBQAAABAAAAQEBAAQAQAVAQBFQBAQEAEBAAQQBAAAEBQAEAAQAQAUAAAAdQCqKgCiKAqAKIoCoqAqAKACiKAACiAqiAKIAogAAACIKgAIACKgCAKIACACAiAioAgAIAIAIIACAAAoIAgAAAAAIAAAA6QGlFQBRFQFQBQAURQUQBVQFURQAAUQBRAFAABEFQAAAEAAQFEABAAQAEBBAQAEAQAEABAEEAAQAAABBFEFFEAUQBRARRAHSqCqogCgAogCqgKoigogCgAoigAAoggogCiAKIAqAACCqgAIACAAgICAAggAIAgAIACAAgCCAAIAqAAAAAIAAAAAAAA6RBoUQFURQUQBQAURQFQQVUAUQBQAUQBRAVRAFEAAABAAEBUBAQAEABBAAQBFQBAAQQAEABBAAAQQVAAAUAAAAUQBRARRAHQA0qiAKIIKqAKIoKIAqoAoiiqIAoigAAogCoCAAACAqAAIAAgAIACAAgAgAggKggAgAIIAgICAKIAAgKAAAAACiAKIAogDoEGhRFAVAFEUFEBVVAFEUFEAUBBRAFEUAAAAAEBRAAABAAQAEABAAQQFQQBAAQRBUEBUQAEBFQAAQFEAURQAAAEFEAUQBRAHQINiiAKIoqiAKqAKIqCiAKqAKIoCoCqIAogCiAKIAAgKIIAICoICoIACCAgAggKggCCAqCACAKggiiAKIAogCiKAACiAqiAKAAAg9hFaBUAUQBVZUFEAVUAVUAUQFaEEFEAURQAABAFEAUQABAVAAQAEEBUEAEAEEBUEEEEBUEBUBUBAFQAAAUQBQAFQRVEAUAAAAAHsIKKIAoigogCqgiqIoKIAqoAogCgAogCiAqiAKgACAioAAgAIACACCIKiACCKKiAggACCoAAAAAAAAAAAAoigACgACoIKIA9RAVRAFVAFEUFEAaEAVWVBRBBVQFUQBRFAAABAUQBUAAQAEABAAQAQQRUQAQRQAVBAEAAAAAAAAAAAAAAAAURQABQAAAGxBFUAFEAVUEFVlQUQFaEAVWVBRAFVlUFEAUQBRAAAAQABAVBAVBAARQQAEEVABUEAQAAAAAAAAAAAAAAAAAAABRFAAFAAaEEVRAFAQUQBVQFVWVBRFQUQBVQBRAFEAUQBRAFEAAQFEAEABAUEEAAVEAEEVFQAAAAAAAAAAAAAAAAAAAAAAAAVAFEAVUEaUQBQAURQFQRVABRFAVBBQAFQBRAFEAUQBUAAEABAAFBABAFBAEARUABAAAAAAAAAAAAAAAAAAAAAAAAAAAAFAFAAAEVRFAVAFVBFUAFEAUBAVAFEAUQBRAFQAARQBAVAAQFBFQQAVBAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAUAUAAAAARVAAVFAAQUAUVAFAAAQAAAAARQAAQAEVFAEEABAEVAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFEAUAAAUAAVFQABVAAVFQAAAUAAAABFQAABFQABRAAQAABUEAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABRAFAFAAUBAVFAABQAAAFAAABAAAARUARUFEVBABQBBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFAAABQAFAAFAAAABQAAAEVAAAEVAEUBEUFQABAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABRRBQEUAAAFRRAAFAAVFAAAVFAAAAQAFEAARQEAFQAEABBUAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAUBoAAABBQAAAUAABBQQAAUAAAAAAABFQAAVBUBBUUQVAAEURQEAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAUBpAABQAAAVFEAAFAAAQVAFAAAAAAAAAFQABFQBFARFBUAFAAEUQQBAAAAAAAAAAAAAAAAAAAAAAAAAAAABQVtEUAAEAFAAEFRQABAFAAAAAAAAAAAAARQEABABUAFQVFABFAAEUQQBAAAAAAAAAAAAAAAAAAAAAAAAAABoBtAAAFAAEAAUAABEUAAAAAAAQAAAFAAAFEAARUFEVAEVBQBFAAAEEFQABAAAAAAAAAAAAAAAAAAAAAAAABoBtAABUUQAAABQAFRRAAAAAAQAAAAAAAFAAEVAEVBRFARFQUAFAEABARUAAQAAAAAAAAAAAAAAAAAAAAAAAAaAbQAEFAAAAAFAEFAAAAAAAQAAAAAAAFAAEABAFAARAFABQBAAQEAABAAAAAAAAAAAAAAAAAAAAAAAAB//Z"
-                className="object-contain"
-                sizes="80vw"
-                quality={90}
-              />
-            </div>
-          )}
-          <div className="flex w-full justify-between sm:justify-center">
+        <DialogHeader className="text-white hidden">
+          <DialogTitle>Image Viewer</DialogTitle>
+          <DialogDescription>
+            Click on the image to close the viewer.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogContent className="p-0 [&>button]:hidden rounded-none border-none">
+          <div className="relative w-full h-auto">
+            {currentIndex !== null ? (
+              (() => {
+                const filePath = `${album}/${images[currentIndex].name}`;
+                const info = (
+                  placeholders as Record<
+                    string,
+                    { placeholder: string; width: number; height: number }
+                  >
+                )[filePath];
+
+                const blurDataURL = info?.placeholder || "";
+                const originalWidth = info?.width || 800;
+                const originalHeight = info?.height || 600;
+
+                return (
+                  <Image
+                    src={`${process.env.NEXT_PUBLIC_CDN_URL}/${filePath}`}
+                    alt={`Full-size album image: ${images[currentIndex].name}`}
+                    placeholder="blur"
+                    blurDataURL={blurDataURL}
+                    width={originalWidth}
+                    height={originalHeight}
+                    className="object-cover w-full h-auto"
+                    quality={90}
+                  />
+                );
+              })()
+            ) : (
+              <p>No images here.</p>
+            )}
+
             <Button
               onClick={showPrevImage}
               variant="ghost"
               size="icon"
-              className="hover:bg-inherit hover:underline"
+              className="absolute top-1/2 left-2 -translate-y-1/2 
+                           bg-white/70 hover:bg-white text-black 
+                           focus:outline-none focus:ring-2 focus:ring-orange-200 
+                           transition-colors"
+              aria-label="Previous image"
             >
               <ArrowLeft size={32} />
             </Button>
@@ -98,7 +155,11 @@ export function ImageViewer({ images, album }: ImageViewerProps) {
               onClick={showNextImage}
               variant="ghost"
               size="icon"
-              className="hover:bg-inherit hover:underline"
+              className="absolute top-1/2 right-2 -translate-y-1/2 
+                           bg-white/70 hover:bg-white text-black
+                           focus:outline-none focus:ring-2 focus:ring-orange-200 
+                           transition-colors"
+              aria-label="Next image"
             >
               <ArrowRight size={32} />
             </Button>

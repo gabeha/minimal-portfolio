@@ -1,3 +1,4 @@
+// app/photos/[id]/page.tsx
 import { Button } from "@/components/ui/button";
 import { formatTitle } from "@/lib/utils";
 import { supabase } from "@/utils/supabase/client";
