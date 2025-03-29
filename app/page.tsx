@@ -69,12 +69,13 @@ const workTimelineItems = [
 const skillsSectionItems = [
   {
     category: "Programming Languages",
-    description: "JavaScript, TypeScript, Python, Java, HTML, CSS, SQL",
+    description:
+      "JavaScript, TypeScript, Advanced Python, Java, HTML, CSS, SQL",
   },
   {
     category: "Frameworks",
     description:
-      "React, Next.js, Vue.js, Node.js, Express.js, Flask, Tensorflow",
+      "React, Next.js, Vue.js, Node.js, Express.js, Flask, Django, Celery, Tensorflow, Redis",
   },
   {
     category: "Tools",

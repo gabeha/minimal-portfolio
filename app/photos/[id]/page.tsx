@@ -1,3 +1,4 @@
+// app/photos/[id]/page.tsx
 import { Button } from "@/components/ui/button";
 import { formatTitle } from "@/lib/utils";
 import { supabase } from "@/utils/supabase/client";
@@ -34,7 +35,7 @@ export default async function AlbumView({ params }: AlbumViewProps) {
   const imageUrls = await fetchPhotos();
 
   return (
-    <div className="w-full">
+    <div className="w-full py-4 mx-auto">
       <Button
         asChild
         variant="ghost"

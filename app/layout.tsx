@@ -18,6 +18,10 @@ const eb_garamond = EB_Garamond({
 
 const links = [
   {
+    href: "/blog",
+    label: "Blog",
+  },
+  {
     href: "/videos",
     label: "Videos",
   },
@@ -37,7 +41,7 @@ export default function RootLayout({
       <body
         className={`${eb_garamond.className} antialiased bg-orange-50 min-h-screen flex flex-col justify-between`}
       >
-        <div className="flex-grow h-full flex flex-col p-4 space-y-2 max-w-2xl mx-auto w-full">
+        <div className="grow h-full flex flex-col p-4 space-y-2 container max-w-4xl mx-auto w-full">
           {/* Header */}
           <header className="h-full flex justify-between w-full items-end">
             <Link href="/">
@@ -56,7 +60,7 @@ export default function RootLayout({
             </div>
           </header>
           <Separator className="bg-black" />
-          <main className="flex-grow h-full w-full mx-auto flex flex-col items-center justify-start">
+          <main className="grow h-full w-full mx-auto flex flex-col items-center justify-start">
             {children}
           </main>
         </div>
