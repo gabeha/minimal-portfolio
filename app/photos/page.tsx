@@ -58,14 +58,13 @@ export default async function Photos() {
         .map((year) => (
           <div key={year} className="space-y-4">
             <h2 className="text-md sm:text-xl font-bold">{year}</h2>
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               {albumsByYear[year].map((album) => {
                 const albumFolder = album.path.split("/")[2];
 
                 // If we have at least one "cover" file in that folder
                 if (album.cover) {
                   const filePath = `${albumFolder}/${album.cover.name}`;
-                  console.log("File path:", filePath);
 
                   // Check placeholders.json for that filePath
                   const blurDataURL =
@@ -91,6 +90,7 @@ export default async function Photos() {
                           src={`${process.env.NEXT_PUBLIC_CDN_URL}/${filePath}`}
                           alt={`Cover for ${album.name}`}
                           fill
+                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                           placeholder="blur"
                           blurDataURL={blurDataURL.placeholder}
                           className="rounded-none shadow-xl object-cover"

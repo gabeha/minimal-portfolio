@@ -4,10 +4,19 @@ import createMDX from "@next/mdx";
 const nextConfig: NextConfig = {
   pageExtensions: ["js", "jsx", "md", "mdx", "ts", "tsx"],
   images: {
-    domains: [
-      "hnzegwsmoxyaapwfrnsp.supabase.co",
-      "i.ytimg.com",
-      "yt3.ggpht.com",
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "hnzegwsmoxyaapwfrnsp.supabase.co",
+      },
+      {
+        protocol: "https",
+        hostname: "i.ytimg.com",
+      },
+      {
+        protocol: "https",
+        hostname: "yt3.ggpht.com",
+      },
     ],
   },
 };
