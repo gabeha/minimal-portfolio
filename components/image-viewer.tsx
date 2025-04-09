@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/dialog";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import Image from "next/image";
-import { KeyboardEvent, useState } from "react";
+import { KeyboardEvent, useState, useRef, useEffect, useCallback } from "react";
 
 // Import placeholders JSON (with { placeholder, width, height } for each image)
 import placeholders from "@/public/placeholders.json";
@@ -24,6 +24,81 @@ interface ImageViewerProps {
 
 export function ImageViewer({ images, album }: ImageViewerProps) {
   const [currentIndex, setCurrentIndex] = useState<number | null>(null);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Helper function to get image info from placeholders - wrapped in useCallback
+  const getImageInfo = useCallback(
+    (imageName: string) => {
+      const filePath = `${album}/${imageName}`;
+      const info = (
+        placeholders as Record<
+          string,
+          { placeholder: string; width: number; height: number }
+        >
+      )[filePath];
+
+      return {
+        blurDataURL: info?.placeholder || "",
+        width: info?.width || 800,
+        height: info?.height || 600,
+      };
+    },
+    [album]
+  );
+
+  // Recalculate container size when window resizes
+  useEffect(() => {
+    if (currentIndex === null) return;
+
+    const handleResize = () => {
+      if (containerRef.current) {
+        const viewportWidth = Math.min(window.innerWidth * 0.9, 1200); // 90% of viewport width or max 1200px
+        const viewportHeight = window.innerHeight * 0.8; // 80% of viewport height
+
+        const imageInfo = getImageInfo(images[currentIndex].name);
+        const imgAspect = imageInfo.width / imageInfo.height;
+
+        let newWidth, newHeight;
+
+        // If image is wider than it is tall
+        if (imgAspect > 1) {
+          newWidth = Math.min(viewportWidth, imageInfo.width);
+          newHeight = newWidth / imgAspect;
+
+          // Check if height exceeds viewport height
+          if (newHeight > viewportHeight) {
+            newHeight = viewportHeight;
+            newWidth = newHeight * imgAspect;
+          }
+        }
+        // If image is taller than it is wide
+        else {
+          newHeight = Math.min(viewportHeight, imageInfo.height);
+          newWidth = newHeight * imgAspect;
+
+          // Check if width exceeds viewport width
+          if (newWidth > viewportWidth) {
+            newWidth = viewportWidth;
+            newHeight = newWidth / imgAspect;
+          }
+        }
+
+        setContainerSize({
+          width: Math.floor(newWidth),
+          height: Math.floor(newHeight),
+        });
+      }
+    };
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, [currentIndex, images, getImageInfo]);
 
   const openImage = (index: number) => {
     setCurrentIndex(index);
@@ -34,39 +109,36 @@ export function ImageViewer({ images, album }: ImageViewerProps) {
   };
 
   const showPrevImage = () => {
-    if (currentIndex !== null) {
-      setCurrentIndex((currentIndex - 1 + images.length) % images.length);
+    if (currentIndex !== null && !isTransitioning) {
+      setIsTransitioning(true);
+      const newIndex = (currentIndex - 1 + images.length) % images.length;
+      setCurrentIndex(newIndex);
+
+      // Reset transitioning state after a short delay
+      setTimeout(() => {
+        setIsTransitioning(false);
+      }, 300);
     }
   };
 
   const showNextImage = () => {
-    if (currentIndex !== null) {
-      setCurrentIndex((currentIndex + 1) % images.length);
+    if (currentIndex !== null && !isTransitioning) {
+      setIsTransitioning(true);
+      const newIndex = (currentIndex + 1) % images.length;
+      setCurrentIndex(newIndex);
+
+      // Reset transitioning state after a short delay
+      setTimeout(() => {
+        setIsTransitioning(false);
+      }, 300);
     }
   };
 
-  // Optional: handle arrow-key navigation in the overall container
+  // Handle arrow-key navigation
   const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     if (e.key === "ArrowLeft") showPrevImage();
     else if (e.key === "ArrowRight") showNextImage();
     else if (e.key === "Escape") closeImage();
-  };
-
-  // Helper function to get image info from placeholders
-  const getImageInfo = (imageName: string) => {
-    const filePath = `${album}/${imageName}`;
-    const info = (
-      placeholders as Record<
-        string,
-        { placeholder: string; width: number; height: number }
-      >
-    )[filePath];
-
-    return {
-      blurDataURL: info?.placeholder || "",
-      width: info?.width || 800,
-      height: info?.height || 600,
-    };
   };
 
   return (
@@ -109,11 +181,23 @@ export function ImageViewer({ images, album }: ImageViewerProps) {
             Click on the image to close the viewer.
           </DialogDescription>
         </DialogHeader>
-        <DialogContent className="p-0 [&>button]:hidden rounded-none border-none">
-          <div className="relative w-full h-auto">
+        <DialogContent className="p-0 [&>button]:hidden rounded-none border-none md:max-w-[90vw] max-h-[80vh] mx-auto flex items-center justify-center overflow-hidden bg-transparent shadow-none border-0">
+          <div className="relative" ref={containerRef}>
             {currentIndex !== null && (
-              <>
-                {/* Current image */}
+              <div
+                className="relative overflow-hidden transition-all duration-300 ease-in-out"
+                style={{
+                  width:
+                    containerSize.width > 0
+                      ? `${containerSize.width}px`
+                      : "auto",
+                  height:
+                    containerSize.height > 0
+                      ? `${containerSize.height}px`
+                      : "auto",
+                  opacity: isTransitioning ? 0.7 : 1,
+                }}
+              >
                 {(() => {
                   const image = images[currentIndex];
                   const { blurDataURL, width, height } = getImageInfo(
@@ -122,36 +206,39 @@ export function ImageViewer({ images, album }: ImageViewerProps) {
 
                   return (
                     <Image
-                      key={`fullsize-${image.id}`}
+                      key={`full-size-${image.id}`}
                       src={`${process.env.NEXT_PUBLIC_CDN_URL}/${album}/${image.name}`}
                       alt={`Full-size album image: ${image.name}`}
                       placeholder="blur"
                       blurDataURL={blurDataURL}
                       width={width}
                       height={height}
-                      className="object-cover w-full h-auto"
+                      className="object-cover w-full h-full"
                       quality={90}
                       priority={true}
+                      onLoad={() => setIsTransitioning(false)}
                     />
                   );
                 })()}
 
-                {/* Navigation buttons */}
-                <button
-                  onClick={showPrevImage}
-                  className="absolute bottom-0 left-2 -translate-y-1/2 text-white"
-                  aria-label="Previous image"
-                >
-                  <ArrowLeft size={24} />
-                </button>
-                <button
-                  onClick={showNextImage}
-                  className="absolute bottom-0 right-2 -translate-y-1/2 text-white"
-                  aria-label="Next image"
-                >
-                  <ArrowRight size={24} />
-                </button>
-              </>
+                {/* Navigation buttons - positioned on top of the image container */}
+                <div className="absolute inset-0 flex items-center justify-between pointer-events-none">
+                  <button
+                    onClick={showPrevImage}
+                    className="p-2 mx-2 bg-black bg-opacity-20 rounded-full text-white pointer-events-auto hover:bg-opacity-40 transition-all"
+                    aria-label="Previous image"
+                  >
+                    <ArrowLeft size={24} />
+                  </button>
+                  <button
+                    onClick={showNextImage}
+                    className="p-2 mx-2 bg-black bg-opacity-20 rounded-full text-white pointer-events-auto hover:bg-opacity-40 transition-all"
+                    aria-label="Next image"
+                  >
+                    <ArrowRight size={24} />
+                  </button>
+                </div>
+              </div>
             )}
           </div>
         </DialogContent>
