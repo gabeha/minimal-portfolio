@@ -1,5 +1,7 @@
 import Image from "next/image";
 import { getChannelVideos } from "@/lib/youtube";
+import { isRouteEnabled } from "@/lib/config";
+import { notFound } from "next/navigation";
 
 interface Video {
   id: string | undefined | null;
@@ -9,6 +11,10 @@ interface Video {
 }
 
 export default async function Home() {
+  if (!isRouteEnabled("videos")) {
+    notFound();
+  }
+
   const videos = await getChannelVideos();
 
   return (

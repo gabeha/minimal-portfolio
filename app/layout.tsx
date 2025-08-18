@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/sonner";
 
 import { Separator } from "@/components/ui/separator";
 import Link from "next/link";
+import { routeConfig } from "@/lib/config";
 
 export const metadata: Metadata = {
   title: "Gabriel Hauss",
@@ -16,20 +17,12 @@ const eb_garamond = EB_Garamond({
   subsets: ["latin"],
 });
 
-const links = [
-  {
-    href: "/blog",
-    label: "Blog",
-  },
-  {
-    href: "/videos",
-    label: "Videos",
-  },
-  {
-    href: "/photos",
-    label: "Photos",
-  },
-];
+const links = Object.entries(routeConfig)
+  .filter(([, config]) => config.enabled)
+  .map(([route, config]) => ({
+    href: `/${route}`,
+    label: config.title,
+  }));
 
 export default function RootLayout({
   children,

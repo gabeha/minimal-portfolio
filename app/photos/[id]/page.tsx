@@ -5,6 +5,8 @@ import { supabase } from "@/utils/supabase/client";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { ImageViewer } from "@/components/image-viewer";
+import { isRouteEnabled } from "@/lib/config";
+import { notFound } from "next/navigation";
 
 export const revalidate = 60; // Revalidate every 60 seconds
 
@@ -13,6 +15,10 @@ interface AlbumViewProps {
 }
 
 export default async function AlbumView({ params }: AlbumViewProps) {
+  if (!isRouteEnabled("photos")) {
+    notFound();
+  }
+
   const { id: album } = await params;
 
   const fetchPhotos = async () => {

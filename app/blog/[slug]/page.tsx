@@ -6,12 +6,18 @@ import { Post } from "@/types/post";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import React from "react";
+import { isRouteEnabled } from "@/lib/config";
+import { notFound } from "next/navigation";
 
 export default async function BlogView({
   params,
 }: {
   params: Promise<{ slug: string }>;
 }) {
+  if (!isRouteEnabled("blog")) {
+    notFound();
+  }
+
   const { slug } = await params;
 
   const PostModule = (await import(`@/content/${slug}.mdx`)) as Post;

@@ -2,10 +2,16 @@
 import { supabase } from "@/utils/supabase/client";
 import Link from "next/link";
 import Image from "next/image";
+import { isRouteEnabled } from "@/lib/config";
+import { notFound } from "next/navigation";
 
 import placeholders from "@/public/placeholders.json";
 
 export default async function Photos() {
+  if (!isRouteEnabled("photos")) {
+    notFound();
+  }
+
   const fetchAlbumsWithCovers = async () => {
     const { data: albumsData, error: albumsError } = await supabase
       .from("albums")

@@ -1,8 +1,14 @@
 // app/blog/page.tsx
 import { getAllPosts } from "@/lib/post-helper";
 import Link from "next/link";
+import { isRouteEnabled } from "@/lib/config";
+import { notFound } from "next/navigation";
 
 export default async function Blog() {
+  if (!isRouteEnabled("blog")) {
+    notFound();
+  }
+
   const posts = await getAllPosts();
   return (
     <div className="w-full space-y-6 mx-auto py-4">
